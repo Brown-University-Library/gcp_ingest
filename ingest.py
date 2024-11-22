@@ -68,20 +68,38 @@ def perform_post(api_url, params, files=None):
     logging.error(msg)
     raise Exception(msg)
 
-def ingest_files(mods_path, file_path, allowed_streams:dict, parent_pid=None):
+def ingest_files(
+    mods_path:Path|str,
+    file_path:Path|str,
+    allowed_streams:dict,
+    parent_relationship:tuple[str]|None=None
+  ) -> str:
   """
   Ingests files into a system.
   Args:
     mods_path (str): The path to the MODS file.
+    file_path (str): The path to the file to ingest.
     allowed_streams (dict): A dictionary mapping file extensions to content streams.
     parent_pid (str, optional): The parent PID. Defaults to None.
-    numbered (bool, optional): Whether the files are numbered. Defaults to False.
   Returns:
-    str: The PID of the ingested files.
+    (str): The PID of the ingested files.
   """
 
   env_vars = setup_environment()
   params = set_basic_params(env_vars)
+
+  if parent_relationship:
+    (parent_pid, rel_type) = parent_relationship
+    if rel_type not in ['isPartOf', 'isTranslationOf', 'isTranscriptOf']:
+      raise ValueError(f"Invalid relationship type: {rel_type}")
+    # Read params['rels'] into a dict
+    temp_rels = json.loads(params["rels"])
+
+    # Set the parent pid and page number
+    temp_rels[rel_type] = parent_pid
+
+    # Convert params['rels'] back to a string
+    params["rels"] = json.dumps(temp_rels)
 
   mods_path = Path(mods_path)
   file = Path(file_path)
@@ -89,16 +107,6 @@ def ingest_files(mods_path, file_path, allowed_streams:dict, parent_pid=None):
     mods_file_obj = mods_file.read()
 
   params["mods"] = json.dumps({"xml_data": mods_file_obj})
-
-  if parent_pid:
-    # Read params['rels'] into a dict
-    temp_rels = json.loads(params["rels"])
-
-    # Set the parent pid and page number
-    temp_rels["isPartOf"] = parent_pid
-
-    # Convert params['rels'] back to a string
-    params["rels"] = json.dumps(temp_rels)
 
   content_streams = []
   files = {}

@@ -129,17 +129,3 @@ def ingest_files(
 
 if __name__ == "__main__":
   logging.info("__name__ is `main`")
-
-  ## -------------------------------------------------------------
-  ## NOTE: This script is meant to be called by `hallhoag_pre_ingest.py`.
-  ## It can be called directly, primarily for testing. Uncomment the below as needed.
-  ## Be sure to check the hard-coded values.
-  ## -------------------------------------------------------------
-
-  # env_vars = setup_environment()
-  # base_dir = pathlib.Path( env_vars['INPUT_FILES_DIR'] )
-  # test_dir = base_dir.joinpath( 'HH020005/HH020005_0001/' )
-  # # pid = do_ingest(test_dir,'',is_child=False)              # THIS IS WHERE WORK IS DONE
-  # pid = do_ingest(test_dir,'',is_child=True,parent_pid='test:5ksjfyb5')              # THIS IS WHERE WORK IS DONE
-  # print( f'pid, ``{pid}``' )
-  # logging.debug( 'eof' )

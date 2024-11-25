@@ -45,10 +45,27 @@ def dict_from_row(row):
     logging.error(f'Multiple files found for {filename}:', files)
     return None
 
-  return {
+  result_dict = {
     'filepath': files[0],
     'filename': filename,
   }
+
+  # return early if there is no parent
+  if 'parent' not in row:
+    return result_dict
+
+  # add parent relationship to dict
+  if 'transcriptions (document)' in row['genreAAT']:
+    parent_relationship = 'isTranscriptOf'
+  elif 'translations (document)' in row['genreAAT']:
+    parent_relationship = 'isTranslationOf'
+  else:
+    parent_relationship = 'isPartOf'
+  result_dict.update({
+    'parent': row['parent'],
+    'relationship': parent_relationship,
+  })
+  return result_dict
 
 def make_ingestable(data_file:Path):
   data = []
@@ -62,7 +79,8 @@ def make_ingestable(data_file:Path):
       **dict_from_row(row),
       'children': [
         dict_from_row(child)
-        for child in data if child['parent'] == row['identifierFileName']
+        for child in data
+        if child['parent'] == row['identifierFileName']
       ],
     } for row in data if row['parent'] == ''
   ]

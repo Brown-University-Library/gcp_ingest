@@ -62,7 +62,6 @@ def dict_from_row(row):
   else:
     parent_relationship = 'isPartOf'
   result_dict.update({
-    'parent': row['parent'],
     'relationship': parent_relationship,
   })
   return result_dict
@@ -93,16 +92,16 @@ def ingest_data(data, mods_dir):
     filepath = Path(row['filepath'])
     filename = row['filename']
     mods = Path(mods_dir).joinpath(f'{filename}.xml')
-    # pid = ingest_files(mods, filepath, stream_map)
+    pid = ingest_files(mods, filepath, stream_map)
     pid = '12345'
 
     for child in row['children']:
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')
-      # ingest_files(mods, child['filepath'], stream_map, pid)
+      ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
 
 def main(data_file: Path):
   load_dotenv()
-  mods_dir = os.environ['MODS_DIR'] 
+  mods_dir = os.environ['MODS_DIR']
   data = make_ingestable(data_file)
   ingest_data(data, mods_dir)
 

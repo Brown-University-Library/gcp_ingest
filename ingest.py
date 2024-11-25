@@ -80,7 +80,7 @@ def ingest_files(
     mods_path (str): The path to the MODS file.
     file_path (str): The path to the file to ingest.
     allowed_streams (dict): A dictionary mapping file extensions to content streams.
-    parent_pid (str, optional): The parent PID. Defaults to None.
+    parent_relationship (tuple): The pid and relationship to parent. Defaults to None.
   Returns:
     (str): The PID of the ingested files.
   """

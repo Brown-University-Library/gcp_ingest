@@ -29,10 +29,10 @@ def dict_from_row(row):
   filename = row['identifierFileName']
   if not filepath.exists():
     logging.error(f"File {filepath} does not exist")
-    return None
+    return {}
   if not filepath.is_dir():
     logging.error(f"File {filepath} is not a directory")
-    return None
+    return {}
 
   files = []
   for file in filepath.glob(str(filename).strip() + '.*'):
@@ -44,10 +44,10 @@ def dict_from_row(row):
 
   if len(files) == 0:
     logging.error(f"No files found for {filename} in {filepath}")
-    return None
+    return {}
   if len(files) > 1:
     logging.error(f'Multiple files found for {filename}:', files)
-    return None
+    return {}
 
   result_dict = {
     'filepath': files[0],

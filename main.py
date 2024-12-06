@@ -5,6 +5,8 @@ from argparse import ArgumentParser
 from dotenv import load_dotenv
 from ingest import ingest_files
 import logging
+import pandas as pd
+from numpy import nan
 
 stream_map = {
   ".mov": "VIDEO-MASTER",
@@ -66,43 +68,77 @@ def dict_from_row(row):
   })
   return result_dict
 
-def make_ingestable(data_file:Path):
-  data = []
-  with data_file.open() as f:
-    reader = csv.DictReader(f, delimiter='\t')
-    next(reader) # skip header
-    data = [row for row in reader if row['identifierFileName'] != '']
+def make_ingestable(data: pd.DataFrame):
+  logging.debug("Making data ingestable")
+
+  data_dict = data.to_dict('records')
+  data_dict.pop(0)
+  logging.debug([{"parent":row['parent'], "filename":row['identifierFileName']} for row in data_dict[:2]])
 
   parented_data = [
     {
       **dict_from_row(row),
       'children': [
-        dict_from_row(child)
-        for child in data
-        if child['parent'] == row['identifierFileName']
+        dict_from_row(row)
+        for child in data_dict
+        if child['identifierFileName'] and child['parent'] == row['identifierFileName']
       ],
-    } for row in data if row['parent'] == ''
+    }
+    for row in data_dict
+    if row['identifierFileName']
+    and not row['parent'] or type(row['parent']) != str
   ]
 
   return parented_data
 
 def ingest_data(data, mods_dir):
   for row in data:
+    parent = {key:value for key,value in row.items() if key != 'children'}
+    if not parent:
+      continue
     logging.info(f'Ingesting parent {row["filename"]}')
-    filepath = Path(row['filepath'])
-    filename = row['filename']
+    filepath = Path(parent['filepath'])
+    filename = parent['filename']
     mods = Path(mods_dir).joinpath(f'{filename}.xml')
     pid = ingest_files(mods, filepath, stream_map)
     pid = '12345'
 
     for child in row['children']:
+      if not child:
+        continue
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')
-      ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
+      # ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
+
+def check_cols(filepath):
+  with open(filepath, 'rb') as f:
+    data = pd.read_excel(f)
+    data = data.fillna('')
+    # Remove empty rows
+    data.dropna(how='all', inplace=True)
+    # Check for empty column headers in pandas dataframe
+    headers = data.columns
+    logging.debug(f"Headers: {headers}")
+    second_row = data.iloc[0]
+    for i, header in enumerate(headers):
+      if 'Unnamed' in header:
+        if "parent" in second_row[i].lower():
+          data.rename(columns={header: 'parent'}, inplace=True)
+          continue
+        if "filepath" in second_row[i].lower():
+          data.rename(columns={header: 'filepath'}, inplace=True)
+          continue
+        print(f"Column {i + 1} is missing, second row value is {second_row[i]}")
+        new_header = input(f"Enter the column header for column {i + 1}: ")
+        if not new_header.isidentifier():
+          raise ValueError(f"'{new_header}' is not a valid column header")
+        data.rename(columns={header: new_header}, inplace=True)
+    return data
 
 def main(data_file: Path):
   load_dotenv()
   mods_dir = os.environ['MODS_DIR']
-  data = make_ingestable(data_file)
+  sheet = check_cols(data_file)
+  data = make_ingestable(sheet)
   ingest_data(data, mods_dir)
 
 if __name__ == '__main__':

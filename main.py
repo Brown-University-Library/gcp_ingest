@@ -15,6 +15,7 @@ stream_map = {
 }
 
 def get_mnt_path_from_windows_path(windows_path):
+  logging.debug(f"Getting mnt path from windows path {windows_path}")
   winpath = PureWindowsPath(windows_path)
   new_root = Path(f"/mnt/{winpath.drive[0].lower()}")
   filepath = new_root.joinpath(*winpath.parts[1:]).resolve()
@@ -22,6 +23,7 @@ def get_mnt_path_from_windows_path(windows_path):
   return filepath
 
 def dict_from_row(row):
+  logging.debug(f"Creating dict from row {row.get('identifierFileName')}")
   # Get the filepath from the row and replace the drive letter
   filepath = get_mnt_path_from_windows_path(row['filepath'])
   filename = row['identifierFileName']
@@ -92,6 +94,7 @@ def make_ingestable(data: pd.DataFrame):
   return parented_data
 
 def ingest_data(data, mods_dir):
+  logging.debug("Ingesting data")
   for row in data:
     parent = {key:value for key,value in row.items() if key != 'children'}
     if not parent:
@@ -142,7 +145,11 @@ def main(data_file: Path):
   ingest_data(data, mods_dir)
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.ERROR)
+  logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
+    datefmt='%d/%b/%Y %H:%M:%S'
+  )
   parser = ArgumentParser()
   parser.add_argument('data_file', type=Path)
   args = parser.parse_args()

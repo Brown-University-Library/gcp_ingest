@@ -1,12 +1,10 @@
 import os
 from pathlib import Path, PureWindowsPath
-import csv
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from ingest import ingest_files
 import logging
 import pandas as pd
-from numpy import nan
 
 stream_map = {
   ".mov": "VIDEO-MASTER",

@@ -88,7 +88,7 @@ def make_ingestable(data: pd.DataFrame):
     }
     for row in data_dict
     if row['identifierFileName']
-    and not row['parent'] or type(row['parent']) != str
+    and not row['parent'] or type(row['parent']) is not str
   ]
 
   return parented_data
@@ -104,17 +104,22 @@ def ingest_data(data, mods_dir):
     filename = parent['filename']
     mods = Path(mods_dir).joinpath(f'{filename}.xml')
     pid = ingest_files(mods, filepath, stream_map)
-    pid = '12345'
+    # pid = '12345'
 
     for child in row['children']:
       if not child:
         continue
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')
-      # ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
+      ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
 
 def check_cols(filepath):
   with open(filepath, 'rb') as f:
-    data = pd.read_excel(f)
+    # print names of sheets
+    sheets = list(enumerate(pd.ExcelFile(filepath).sheet_names))
+    for i, sheet in sheets:
+      print(i,sheet)
+    sheet_num = int(input("Enter the number of the sheet you want to ingest: "))
+    data = pd.read_excel(f,sheet_name=sheets[sheet_num][1])
     data = data.fillna('')
     # Remove empty rows
     data.dropna(how='all', inplace=True)

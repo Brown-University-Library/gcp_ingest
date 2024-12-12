@@ -2,3 +2,5 @@ python-dotenv
 requests
 numpy
 pandas
+openpyxl
+

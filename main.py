@@ -1,24 +1,39 @@
 import os
 from pathlib import Path, PureWindowsPath
-import csv
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 from ingest import ingest_files
 import logging
 import pandas as pd
-from numpy import nan
 
 stream_map = {
   ".mov": "VIDEO-MASTER",
   ".mp4": "VIDEO-MASTER",
   ".pdf": "PDF",
 }
+cache = {}
 
-def get_mnt_path_from_windows_path(windows_path):
+def get_mnt_path_from_windows_path(windows_path:str):
   logging.debug(f"Getting mnt path from windows path {windows_path}")
+  if windows_path in cache:
+    return cache[windows_path]
+
   winpath = PureWindowsPath(windows_path)
-  new_root = Path(f"/mnt/{winpath.drive[0].lower()}")
-  filepath = new_root.joinpath(*winpath.parts[1:]).resolve()
+  new_root = cache['mntdir'].joinpath(winpath.drive[0].lower())
+
+  split_path = windows_path.split('\\')
+  cache_options = reversed(['\\'.join(split_path[:i]) for i in range(len(split_path))])
+
+  for option in cache_options:
+    if option in cache:
+      # get the remaining path after the cached path
+      remaining_path = '\\'.join(split_path[len(option.split('\\')):])
+      return cache[option].joinpath(remaining_path)
+    else:
+      filepath = new_root.joinpath(*option.split('\\')[1:])
+      cache[option] = filepath
+
+  cache[windows_path] = filepath
 
   return filepath
 
@@ -26,6 +41,8 @@ def dict_from_row(row):
   logging.debug(f"Creating dict from row {row.get('identifierFileName')}")
   # Get the filepath from the row and replace the drive letter
   filepath = get_mnt_path_from_windows_path(row['filepath'])
+  # add path to cache
+  cache[row['filepath']] = filepath
   filename = row['identifierFileName']
   if not filepath.exists():
     logging.error(f"File {filepath} does not exist")
@@ -157,6 +174,12 @@ if __name__ == '__main__':
   )
   parser = ArgumentParser()
   parser.add_argument('data_file', type=Path)
+  parser.add_argument('--mntdir', type=str, default='/mnt')
   args = parser.parse_args()
+  mount_dirpath = Path(args.mntdir)
+  cache.update({
+    'mntdir': mount_dirpath,
+    args.mntdir: mount_dirpath
+  })
   main(args.data_file)
 

@@ -69,10 +69,10 @@ def perform_post(api_url, params, files=None):
     raise Exception(msg)
 
 def ingest_files(
-    mods_path:Path|str,
-    file_path:Path|str,
+    mods_path,
+    file_path,
     allowed_streams:dict,
-    parent_relationship:tuple[str]|None=None
+    parent_relationship
   ) -> str:
   """
   Ingests files into a system.

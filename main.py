@@ -14,18 +14,18 @@ stream_map = {
   ".pdf": "PDF",
 }
 
-def get_mnt_path_from_windows_path(windows_path):
+def get_mnt_path_from_windows_path(windows_path,mount_dir='/mnt'):
   logging.debug(f"Getting mnt path from windows path {windows_path}")
   winpath = PureWindowsPath(windows_path)
-  new_root = Path(f"/mnt/{winpath.drive[0].lower()}")
+  new_root = Path(f"{mount_dir}/{winpath.drive[0].lower()}")
   filepath = new_root.joinpath(*winpath.parts[1:]).resolve()
 
   return filepath
 
-def dict_from_row(row):
+def dict_from_row(row,mount_dir='/mnt'):
   logging.debug(f"Creating dict from row {row.get('identifierFileName')}")
   # Get the filepath from the row and replace the drive letter
-  filepath = get_mnt_path_from_windows_path(row['filepath'])
+  filepath = get_mnt_path_from_windows_path(row['filepath'],mount_dir)
   filename = row['identifierFileName']
   if not filepath.exists():
     logging.error(f"File {filepath} does not exist")
@@ -70,7 +70,7 @@ def dict_from_row(row):
   })
   return result_dict
 
-def make_ingestable(data: pd.DataFrame):
+def make_ingestable(data: pd.DataFrame,mount_dir='/mnt'):
   logging.debug("Making data ingestable")
 
   data_dict = data.to_dict('records')
@@ -79,9 +79,9 @@ def make_ingestable(data: pd.DataFrame):
 
   parented_data = [
     {
-      **dict_from_row(row),
+      **dict_from_row(row,mount_dir),
       'children': [
-        dict_from_row(row)
+        dict_from_row(row,mount_dir)
         for child in data_dict
         if child['identifierFileName'] and child['parent'] == row['identifierFileName']
       ],
@@ -142,11 +142,11 @@ def check_cols(filepath):
         data.rename(columns={header: new_header}, inplace=True)
     return data
 
-def main(data_file: Path):
+def main(data_file: Path, mount_dir: str = '/mnt'):
   load_dotenv()
   mods_dir = os.environ['MODS_DIR']
   sheet = check_cols(data_file)
-  data = make_ingestable(sheet)
+  data = make_ingestable(sheet,mount_dir)
   ingest_data(data, mods_dir)
 
 if __name__ == '__main__':
@@ -157,6 +157,7 @@ if __name__ == '__main__':
   )
   parser = ArgumentParser()
   parser.add_argument('data_file', type=Path)
+  parser.add_argument('--mount_dir', type=str, default='/mnt')
   args = parser.parse_args()
-  main(args.data_file)
+  main(args.data_file, args.mount_dir)
 

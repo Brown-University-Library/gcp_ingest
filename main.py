@@ -210,7 +210,11 @@ if __name__ == '__main__':
   logging.basicConfig(
     level=logging.DEBUG,
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
-    datefmt='%d/%b/%Y %H:%M:%S'
+    datefmt='%d/%b/%Y %H:%M:%S',
+    handlers=[
+        logging.FileHandler("../gcp_ingest.log"),
+        logging.StreamHandler()
+    ]
   )
   parser = ArgumentParser()
   parser.add_argument('data_file', type=Path)

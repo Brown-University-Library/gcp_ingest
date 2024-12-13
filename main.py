@@ -13,36 +13,46 @@ stream_map = {
 }
 cache = {}
 
+
+def get_cache_options(split_path:list):
+  logging.debug(f"Getting cache options from split path {split_path}")
+  cache_options = []
+  for i in range(len(split_path), 0, -1):
+    cache_options.append('\\'.join(split_path[:i+1]))
+  return cache_options
+
 def get_mnt_path_from_windows_path(windows_path:str):
   logging.debug(f"Getting mnt path from windows path {windows_path}")
   if windows_path in cache:
-    return cache[windows_path]
+    return cache[windows_path]['path']
 
   winpath = PureWindowsPath(windows_path)
-  new_root = cache['mntdir'].joinpath(winpath.drive[0].lower())
+  new_root = cache['mntdir']['path'].joinpath(winpath.drive[0].lower())
 
   split_path = windows_path.split('\\')
-  cache_options = reversed(['\\'.join(split_path[:i]) for i in range(len(split_path))])
+  cache_options = get_cache_options(split_path)
+  # logging.debug(f"Cache options: {cache_options}")
 
   for option in cache_options:
     if option in cache:
       # get the remaining path after the cached path
       remaining_path = '\\'.join(split_path[len(option.split('\\')):])
-      return cache[option].joinpath(remaining_path)
+      return cache[option]['path'].joinpath(remaining_path)
     else:
       filepath = new_root.joinpath(*option.split('\\')[1:])
-      cache[option] = filepath
+      cache[option] = {'path':filepath}
 
-  cache[windows_path] = filepath
+  cache[windows_path] = {'path': filepath}
 
   return filepath
 
 def dict_from_row(row):
   logging.debug(f"Creating dict from row {row.get('identifierFileName')}")
   # Get the filepath from the row and replace the drive letter
-  filepath = get_mnt_path_from_windows_path(row['filepath'])
+  filepath_str = row['filepath']
+  filepath = get_mnt_path_from_windows_path(filepath_str)
   # add path to cache
-  cache[row['filepath']] = filepath
+  cache[filepath_str]['path'] = filepath
   filename = row['identifierFileName']
   if not filepath.exists():
     logging.error(f"File {filepath} does not exist")
@@ -52,7 +62,14 @@ def dict_from_row(row):
     return {}
 
   files = []
-  for file in filepath.glob(str(filename).strip() + '.*'):
+  if not cache[filepath_str].get('glob', None):
+    cache[filepath_str]['glob'] = list(filepath.glob('*'))
+  fileglob = cache[filepath_str]['glob']
+  logging.debug(f"Fileglob: {fileglob}")
+  for file in fileglob:
+    if file.stem != filename:
+      logging.debug(f"Skipping file {file.name} because {file.stem} != {filename}")
+      continue
     if file.suffix.lower() not in stream_map.keys():
       logging.debug(f"Skipping {file.suffix[1:].upper()} file {file.name}")
       continue
@@ -92,13 +109,13 @@ def make_ingestable(data: pd.DataFrame):
 
   data_dict = data.to_dict('records')
   data_dict.pop(0)
-  logging.debug([{"parent":row['parent'], "filename":row['identifierFileName']} for row in data_dict[:2]])
+  logging.debug([{"parent":row['parent'], "filename":row['identifierFileName']} for row in data_dict[:4]])
 
   parented_data = [
     {
       **dict_from_row(row),
       'children': [
-        dict_from_row(row)
+        dict_from_row(child)
         for child in data_dict
         if child['identifierFileName'] and child['parent'] == row['identifierFileName']
       ],
@@ -107,7 +124,7 @@ def make_ingestable(data: pd.DataFrame):
     if row['identifierFileName']
     and not row['parent'] or type(row['parent']) is not str
   ]
-
+  logging.debug(parented_data)
   return parented_data
 
 def ingest_data(data, mods_dir):
@@ -129,20 +146,25 @@ def ingest_data(data, mods_dir):
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')
       ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
 
-def check_cols(filepath):
+def get_sheet_name(filepath):
+  sheets = pd.ExcelFile(filepath).sheet_names
+  for i, sheet in enumerate(sheets):
+    print(i,sheet)
+  sheet_num = int(input("Enter the number of the sheet you want to ingest: "))
+  return sheets[sheet_num]
+
+def check_cols(filepath,sheet_name=None):
   with open(filepath, 'rb') as f:
     # print names of sheets
-    sheets = list(enumerate(pd.ExcelFile(filepath).sheet_names))
-    for i, sheet in sheets:
-      print(i,sheet)
-    sheet_num = int(input("Enter the number of the sheet you want to ingest: "))
-    data = pd.read_excel(f,sheet_name=sheets[sheet_num][1])
+    if not sheet_name:
+      sheet_name = get_sheet_name(filepath)
+    data = pd.read_excel(f,sheet_name)
     data = data.fillna('')
     # Remove empty rows
     data.dropna(how='all', inplace=True)
     # Check for empty column headers in pandas dataframe
     headers = data.columns
-    logging.debug(f"Headers: {headers}")
+    # logging.debug(f"Headers: {headers}")
     second_row = data.iloc[0]
     for i, header in enumerate(headers):
       if 'Unnamed' in header:
@@ -159,10 +181,10 @@ def check_cols(filepath):
         data.rename(columns={header: new_header}, inplace=True)
     return data
 
-def main(data_file: Path):
+def main(args):
   load_dotenv()
   mods_dir = os.environ['MODS_DIR']
-  sheet = check_cols(data_file)
+  sheet = check_cols(args.data_file, args.sheet)
   data = make_ingestable(sheet)
   ingest_data(data, mods_dir)
 
@@ -175,11 +197,12 @@ if __name__ == '__main__':
   parser = ArgumentParser()
   parser.add_argument('data_file', type=Path)
   parser.add_argument('--mntdir', type=str, default='/mnt')
+  parser.add_argument('--sheet', type=str)
   args = parser.parse_args()
   mount_dirpath = Path(args.mntdir)
   cache.update({
-    'mntdir': mount_dirpath,
-    args.mntdir: mount_dirpath
+    'mntdir': {'path':mount_dirpath},
+    args.mntdir: {'path':mount_dirpath}
   })
-  main(args.data_file)
+  main(args)
 

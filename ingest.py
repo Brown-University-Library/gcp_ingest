@@ -114,6 +114,7 @@ def ingest_files(
 
   logging.debug(f"ingesting {file_path}")
   if not file_path:
+    pid = 'fake12345'
     pid = perform_post(api_url=env_vars["api_url"], params=params)
     return pid
 
@@ -134,6 +135,7 @@ def ingest_files(
 
     files[file.name] = file_obj.read()
 
+  pid = "fake12345"
   pid = perform_post(api_url=env_vars["api_url"], params=params, files=files)
 
   return pid

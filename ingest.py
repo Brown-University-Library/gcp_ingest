@@ -75,7 +75,7 @@ def perform_post(api_url, params, files=None):
 
 def ingest_files(
     mods_path,
-    file_path:str,
+    file_path,
     allowed_streams:dict,
     parent_relationship=None
   ) -> str:
@@ -112,6 +112,7 @@ def ingest_files(
 
   params["mods"] = json.dumps({"xml_data": mods_file_obj})
 
+  logging.debug(f"ingesting {file_path}")
   if not file_path:
     pid = perform_post(api_url=env_vars["api_url"], params=params)
     return pid

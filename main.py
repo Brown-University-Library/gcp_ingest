@@ -138,7 +138,7 @@ def make_ingestable(data: pd.DataFrame):
   parented_data = [
     {
       "filename": row['identifierFileName'],
-      "filepath": '',
+      "filepath": None,
       'children': [dict_from_row(row)]+[
         dict_from_row(child)
         for child in data_dict
@@ -159,7 +159,7 @@ def ingest_data(data, mods_dir):
     if not parent:
       continue
     logging.info(f'Ingesting parent {row["filename"]}')
-    filepath = str(parent['filepath'])
+    filepath = Path(parent['filepath'])
     filename = parent['filename']
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
     pid = ingest_files(mods, filepath, stream_map)

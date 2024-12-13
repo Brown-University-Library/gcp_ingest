@@ -216,6 +216,28 @@ def main(args):
     return
   ingest_data(data, mods_dir)
 
+def parse_arguments():
+  parser = ArgumentParser()
+  parser.add_argument('data_file',
+    type=Path,
+    help='Path to the data file'
+  )
+  parser.add_argument('--mntdir',
+    type=str,
+    default='/mnt',
+    help='Parent dir of mount(s), win drive letter is used as actual mountpoint'
+  )
+  parser.add_argument('--sheet',
+    type=str,
+    help='Sheet name in the excel file'
+  )
+  parser.add_argument('--mock',
+    action='store_true',
+    help='Run without ingesting'
+  )
+  args = parser.parse_args()
+  return args
+
 if __name__ == '__main__':
   logging.basicConfig(
     level=logging.DEBUG,
@@ -226,12 +248,7 @@ if __name__ == '__main__':
         logging.StreamHandler()
     ]
   )
-  parser = ArgumentParser()
-  parser.add_argument('data_file', type=Path)
-  parser.add_argument('--mntdir', type=str, default='/mnt')
-  parser.add_argument('--sheet', type=str)
-  parser.add_argument('--mock', action='store_true')
-  args = parser.parse_args()
+  args = parse_arguments()
   mount_dirpath = Path(args.mntdir)
   cache.update({
     'mntdir': {'path':mount_dirpath},

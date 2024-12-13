@@ -135,13 +135,13 @@ def ingest_files(
 
     files[file.name] = file_obj
 
-  logging.debug(f"{params=}")
-  logging.debug(f"{content_streams=}")
+    logging.debug(f"{params=}")
+    logging.debug(f"{content_streams=}")
 
-  pid = "fake12345"
-  pid = perform_post(api_url=env_vars["api_url"], params=params, files=files)
+    pid = "fake12345"
+    pid = perform_post(api_url=env_vars["api_url"], params=params, files=files)
 
-  return pid
+    return pid
 
 if __name__ == "__main__":
   logging.info("__name__ is `main`")

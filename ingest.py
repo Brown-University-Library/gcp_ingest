@@ -75,7 +75,7 @@ def perform_post(api_url, params, files=None):
 
 def ingest_files(
     mods_path,
-    file_path,
+    file_path:str,
     allowed_streams:dict,
     parent_relationship=None
   ) -> str:

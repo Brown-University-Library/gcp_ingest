@@ -119,7 +119,7 @@ def ingest_files(
   if file.suffix not in allowed_streams.keys():
     input(f"File extension {file.suffix} not allowed. Press enter to continue.")
     return
-  params["content_model"] = allowed_streams[file.suffix]
+  # params["content_model"] = allowed_streams[file.suffix]
 
   with open(file, "rb") as file_obj:
     content_streams.append({

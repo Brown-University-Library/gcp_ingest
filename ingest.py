@@ -107,12 +107,16 @@ def ingest_files(
     params["rels"] = json.dumps(temp_rels)
 
   mods_path = Path(mods_path)
-  file = Path(file_path)
   with open(mods_path, "r") as mods_file:
     mods_file_obj = mods_file.read()
 
   params["mods"] = json.dumps({"xml_data": mods_file_obj})
 
+  if not file_path:
+    pid = perform_post(api_url=env_vars["api_url"], params=params)
+    return pid
+
+  file = Path(file_path)
   content_streams = []
   files = {}
 

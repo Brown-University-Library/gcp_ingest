@@ -129,12 +129,17 @@ def make_ingestable(data: pd.DataFrame):
 
   data_dict = data.to_dict('records')
   data_dict.pop(0)
-  logging.debug([{"parent":row['parent'], "filename":row['identifierFileName']} for row in data_dict[:4]])
+  logging.debug([
+      { "parent":row['parent'],
+        "filename":row['identifierFileName']
+      } for row in data_dict[:4]
+  ])
 
   parented_data = [
     {
-      **dict_from_row(row),
-      'children': [
+      "filename": row['identifierFileName'],
+      "filepath": '',
+      'children': [dict_from_row(row)]+[
         dict_from_row(child)
         for child in data_dict
         if child['identifierFileName'] and child['parent'] == row['identifierFileName']

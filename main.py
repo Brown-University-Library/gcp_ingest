@@ -154,7 +154,7 @@ def ingest_data(data, mods_dir):
     logging.info(f'Ingesting parent {row["filename"]}')
     filepath = Path(parent['filepath'])
     filename = parent['filename']
-    mods = Path(mods_dir).joinpath(f'{filename}.xml')
+    mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
     pid = ingest_files(mods, filepath, stream_map)
     # pid = '12345'
 

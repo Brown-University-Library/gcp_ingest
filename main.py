@@ -206,6 +206,9 @@ def main(args):
   mods_dir = os.environ['MODS_DIR']
   sheet = check_cols(args.data_file, args.sheet)
   data = make_ingestable(sheet)
+  if args.mock:
+    logging.info("Mock run, not ingesting")
+    return
   ingest_data(data, mods_dir)
 
 if __name__ == '__main__':
@@ -218,6 +221,7 @@ if __name__ == '__main__':
   parser.add_argument('data_file', type=Path)
   parser.add_argument('--mntdir', type=str, default='/mnt')
   parser.add_argument('--sheet', type=str)
+  parser.add_argument('--mock', action='store_true')
   args = parser.parse_args()
   mount_dirpath = Path(args.mntdir)
   cache.update({

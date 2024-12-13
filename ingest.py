@@ -133,7 +133,7 @@ def ingest_files(
       "file_name": file.name
     })
 
-    files[file.name] = file_obj.read()
+    files[file.name] = file_obj
 
   logging.debug(f"{params=}")
   logging.debug(f"{content_streams=}")

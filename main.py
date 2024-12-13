@@ -1,6 +1,7 @@
 import os
 from pathlib import Path, PureWindowsPath
 from argparse import ArgumentParser
+from pprint import pprint
 from dotenv import load_dotenv
 from ingest import ingest_files
 import logging
@@ -32,7 +33,7 @@ def abbr_path(path:str, length:int, sep:str='/',abbr_len:int=2):
   return '...'+test_path[length-3:]
 
 def get_cache_options(split_path:list):
-  logging.debug(f"Getting cache options from split path {split_path}")
+  # logging.debug(f"Getting cache options from split path {split_path}")
   cache_options = []
   for i in range(len(split_path), 0, -1):
     cache_options.append('\\'.join(split_path[:i+1]))
@@ -143,7 +144,7 @@ def make_ingestable(data: pd.DataFrame):
     if row['identifierFileName']
     and not row['parent'] or type(row['parent']) is not str
   ]
-  logging.debug(parented_data)
+  logging.debug(pprint(parented_data,sort_dicts=False))
   return parented_data
 
 def ingest_data(data, mods_dir):

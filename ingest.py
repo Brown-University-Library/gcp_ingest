@@ -72,7 +72,7 @@ def ingest_files(
     mods_path,
     file_path,
     allowed_streams:dict,
-    parent_relationship
+    parent_relationship=None
   ) -> str:
   """
   Ingests files into a system.

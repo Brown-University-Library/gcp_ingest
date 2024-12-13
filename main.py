@@ -111,9 +111,10 @@ def dict_from_row(row):
     return result_dict
 
   # add parent relationship to dict
-  if 'transcriptions (document)' in row['genreAAT']:
+  logging.debug(f"Genre: {row.get('genreAAT')}")
+  if 'transcriptions (documents)' in row['genreAAT']:
     parent_relationship = 'isTranscriptOf'
-  elif 'translations (document)' in row['genreAAT']:
+  elif 'translations (documents)' in row['genreAAT']:
     parent_relationship = 'isTranslationOf'
   else:
     parent_relationship = 'isPartOf'

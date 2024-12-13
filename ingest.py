@@ -20,6 +20,8 @@ def setup_environment():
   logging.debug(f"API_URL, ``{API_URL}``")
   OWNER_ID = os.environ["OWNER_ID"]
   logging.debug(f"OWNER_ID, ``{OWNER_ID}``")
+  API_KEY = os.environ["API_KEY"]
+  logging.debug(f"API_KEY, ``{API_KEY}``")
 
   # TEMPORARY
   INPUT_FILES_DIR = os.environ["INPUT_FILES_DIR"]
@@ -30,6 +32,7 @@ def setup_environment():
   env_vars["api_identity"] = API_IDENTITY
   env_vars["api_url"] = API_URL
   env_vars["owner_id"] = OWNER_ID
+  env_vars["api_key"] = API_KEY
 
   # TEMPORARY
   env_vars["INPUT_FILES_DIR"] = INPUT_FILES_DIR
@@ -41,10 +44,12 @@ def set_basic_params(env_vars):
   Called by run_create_metadata_only_object()"""
   params = {
     "identity": env_vars["api_identity"],
+    "authorization_code": env_vars["api_key"],
     "rights": json.dumps(
       {
         "parameters": {
           "owner_id": env_vars["owner_id"],
+          "additional_rights": 'BDR_PUBLIC#discover,display'
         }
       }
     ),
@@ -114,6 +119,7 @@ def ingest_files(
   if file.suffix not in allowed_streams.keys():
     input(f"File extension {file.suffix} not allowed. Press enter to continue.")
     return
+  params["content_model"] = allowed_streams[file.suffix]
 
   with open(file, "rb") as file_obj:
     content_streams.append({

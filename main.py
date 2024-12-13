@@ -13,6 +13,23 @@ stream_map = {
 }
 cache = {}
 
+def abbr_path(path:str, length:int, sep:str='/',abbr_len:int=2):
+  if len(path) < length:
+    return path
+
+  split_path = [part for part in path.split(sep) if part]
+  abbr_split_path = [part[:abbr_len] for part in split_path]
+
+  test_path = ""
+  if sep == '/':
+    test_path += sep
+
+  for i in range(len(split_path)):
+    test_path = sep.join(abbr_split_path[:i])+sep+sep.join(split_path[i:])
+    if len(test_path) > length:
+      continue
+    return test_path
+  return '...'+test_path[length-3:]
 
 def get_cache_options(split_path:list):
   logging.debug(f"Getting cache options from split path {split_path}")
@@ -22,7 +39,8 @@ def get_cache_options(split_path:list):
   return cache_options
 
 def get_mnt_path_from_windows_path(windows_path:str):
-  logging.debug(f"Getting mnt path from windows path {windows_path}")
+  sep='\\'
+  logging.debug(f"Getting mnt path from windows path {abbr_path(windows_path,40,sep)}")
   if windows_path in cache:
     return cache[windows_path]['path']
 

@@ -135,8 +135,8 @@ def ingest_files(
 
     files[file.name] = file_obj.read()
 
-  logging.debug(f"params: {params}")
-  logging.debug(f"files: {files}")
+  logging.debug(f"{params=}")
+  logging.debug(f"{content_streams=}")
 
   pid = "fake12345"
   pid = perform_post(api_url=env_vars["api_url"], params=params, files=files)

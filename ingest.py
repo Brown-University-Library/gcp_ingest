@@ -132,7 +132,7 @@ def ingest_files(
       "dsID": allowed_streams[file.suffix],
       "file_name": file.name
     })
-
+    params['content_streams'] = json.dumps(content_streams)
     files[file.name] = file_obj
 
     logging.debug(f"{params=}")

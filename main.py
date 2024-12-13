@@ -159,7 +159,7 @@ def ingest_data(data, mods_dir):
     if not parent:
       continue
     logging.info(f'Ingesting parent {row["filename"]}')
-    filepath = Path(parent['filepath'])
+    filepath = parent['filepath']
     filename = parent['filename']
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
     pid = ingest_files(mods, filepath, stream_map)

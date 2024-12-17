@@ -86,6 +86,12 @@ def ingest_files(
   env_vars = setup_environment()
   params = set_basic_params(env_vars)
 
+  mods_path = Path(mods_path)
+  with open(mods_path, "r") as mods_file:
+    mods_file_obj = mods_file.read()
+
+  params["mods"] = json.dumps({"xml_data": mods_file_obj})
+
   if parent_relationship:
     (parent_pid, rel_type) = parent_relationship
     if rel_type not in ['isPartOf', 'isTranslationOf', 'isTranscriptOf']:
@@ -99,17 +105,13 @@ def ingest_files(
     # Convert params['rels'] back to a string
     params["rels"] = json.dumps(temp_rels)
 
-  mods_path = Path(mods_path)
-  with open(mods_path, "r") as mods_file:
-    mods_file_obj = mods_file.read()
-
-  params["mods"] = json.dumps({"xml_data": mods_file_obj})
-
-  logging.debug(f"ingesting {file_path}")
-  if not file_path:
-    pid = 'fake12345'
+    
     pid = perform_post(api_url=env_vars["api_url"], params=params)
     return pid
+
+  if not file_path:
+    logging.warning(f"While ingesting, there's no file path for {mods_path.name}")
+  logging.debug(f"ingesting {file_path}")
 
   file = Path(file_path)
   content_streams = []

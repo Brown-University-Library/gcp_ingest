@@ -138,7 +138,7 @@ def make_ingestable(data: pd.DataFrame):
   parented_data = []
   for row in data_dict:
     if not row['identifierFileName'] or not row["filepath"]:
-      logging.warning(f"Row has no filename and/or path: {row["itemTitle"]}")
+      logging.warning(f"Row has no filename and/or path: {row['itemTitle']}")
       continue
     if row['parent'] and type(row['parent']) is str:
       continue

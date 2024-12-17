@@ -159,11 +159,10 @@ def make_ingestable(data: pd.DataFrame):
 
 def ingest_data(data, mods_dir):
   logging.info("Ingesting data")
-  for row in data:
-    parent = {key:value for key,value in row.items() if key != 'children'}
+  for parent in data:
     if not parent:
       continue
-    logging.info(f'Ingesting parent {row["filename"]}')
+    logging.info(f'Ingesting parent {parent["filename"]}')
     filepath = parent['filepath']
     filename = parent['filename']
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')

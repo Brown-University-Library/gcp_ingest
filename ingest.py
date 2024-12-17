@@ -93,25 +93,25 @@ def ingest_files(
 
   params["mods"] = json.dumps({"xml_data": mods_file_obj})
 
-  if parent_relationship:
-    (parent_pid, rel_type) = parent_relationship
-    if rel_type not in ['isPartOf', 'isTranslationOf', 'isTranscriptOf']:
-      raise ValueError(f"Invalid relationship type: {rel_type}")
-    # Read params['rels'] into a dict
-    temp_rels = json.loads(params["rels"])
-
-    # Set the parent pid and page number
-    temp_rels[rel_type] = parent_pid
-
-    # Convert params['rels'] back to a string
-    params["rels"] = json.dumps(temp_rels)
-
-    
+  if not parent_relationship:
     pid = perform_post(api_url=env_vars["api_url"], params=params)
     return pid
 
+  (parent_pid, rel_type) = parent_relationship
+  if rel_type not in ['isPartOf', 'isTranslationOf', 'isTranscriptOf']:
+    raise ValueError(f"Invalid relationship type: {rel_type}")
+  # Read params['rels'] into a dict
+  temp_rels = json.loads(params["rels"])
+
+  # Set the parent pid and page number
+  temp_rels[rel_type] = parent_pid
+
+  # Convert params['rels'] back to a string
+  params["rels"] = json.dumps(temp_rels)
+
   if not file_path:
     logging.warning(f"While ingesting, there's no file path for {mods_path.name}")
+    raise TypeError
   logging.debug(f"ingesting {file_path}")
 
   file = Path(file_path)

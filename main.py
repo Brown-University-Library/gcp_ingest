@@ -174,7 +174,7 @@ def ingest_data(data, mods_dir):
     # pid = '12345'
     logging.info(f'ingested. {pid=}')
 
-    for child in row['children']:
+    for child in parent['children']:
       if not child:
         continue
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')

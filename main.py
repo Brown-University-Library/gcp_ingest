@@ -220,6 +220,7 @@ def main(args):
   sheet = check_cols(args.data_file, args.sheet)
   data = make_ingestable(sheet)
   if args.mock:
+    logging.info(pformat(data,sort_dicts=False))
     logging.info("Mock run, not ingesting")
     return
   ingest_data(data, mods_dir)

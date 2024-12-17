@@ -122,7 +122,7 @@ def ingest_files(
 
   with open(file, "rb") as file_obj:
     content_streams.append({
-      "dsID": allowed_streams[file.suffix],
+      "dsID": allowed_streams[file.suffix.lower()],
       "file_name": file.name
     })
     params['content_streams'] = json.dumps(content_streams)

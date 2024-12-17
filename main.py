@@ -172,6 +172,7 @@ def ingest_data(data, mods_dir):
     if not pid:
       logging.warning(f"ingest failed, no pid for ingest of {filename}")
     # pid = '12345'
+    logging.info(f'ingested. {pid=}')
 
     for child in row['children']:
       if not child:

@@ -175,6 +175,7 @@ def ingest_data(data, mods_dir):
     for child in parent['children']:
       if not child:
         continue
+      mods = Path(mods_dir).joinpath(f'{child['filename']}.mods.xml')
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')
       ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
 

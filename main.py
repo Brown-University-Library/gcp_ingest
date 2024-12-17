@@ -1,7 +1,7 @@
 import os
 from pathlib import Path, PureWindowsPath
 from argparse import ArgumentParser
-from pprint import pprint
+from pprint import pformat
 from dotenv import load_dotenv
 from ingest import ingest_files
 import logging
@@ -154,7 +154,7 @@ def make_ingestable(data: pd.DataFrame):
         parent['children'].append(dict_from_row(child))
     parented_data.append(parent)
 
-  logging.debug(pprint(parented_data,sort_dicts=False))
+  logging.debug(pformat(parented_data,sort_dicts=False,))
   return parented_data
 
 def ingest_data(data, mods_dir):

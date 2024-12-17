@@ -23,19 +23,12 @@ def setup_environment():
   API_KEY = os.environ["API_KEY"]
   logging.debug(f"API_KEY, ``{API_KEY}``")
 
-  # TEMPORARY
-  INPUT_FILES_DIR = os.environ["INPUT_FILES_DIR"]
-  logging.debug(f"INPUT_FILES_DIR, ``{INPUT_FILES_DIR}``")
-
   env_vars = {}
   env_vars["collection_pid"] = COLLECTION_PID
   env_vars["api_identity"] = API_IDENTITY
   env_vars["api_url"] = API_URL
   env_vars["owner_id"] = OWNER_ID
   env_vars["api_key"] = API_KEY
-
-  # TEMPORARY
-  env_vars["INPUT_FILES_DIR"] = INPUT_FILES_DIR
 
   return env_vars
 

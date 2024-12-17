@@ -147,12 +147,11 @@ def make_ingestable(data: pd.DataFrame):
       "filepath": None,
       'children': [dict_from_row(row)],
     }
-    children = []
     for child in data_dict:
       if not child['identifierFileName']:
         continue
       if child['parent'] == row['identifierFileName']:
-        children.append(dict_from_row(child))
+        parent['children'].append(dict_from_row(child))
     parented_data.append(parent)
 
   logging.debug(pprint(parented_data,sort_dicts=False))

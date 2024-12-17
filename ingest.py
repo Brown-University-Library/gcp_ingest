@@ -51,6 +51,7 @@ def set_basic_params(env_vars):
   return params
 
 def perform_post(api_url, params, files=None):
+  logging.info("performing post")
   try:
     if files:
       r = requests.post(api_url, data=params, files=files)

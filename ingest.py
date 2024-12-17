@@ -115,7 +115,7 @@ def ingest_files(
   content_streams = []
   files = {}
 
-  if file.suffix not in allowed_streams.keys():
+  if file.suffix.lower() not in allowed_streams.keys():
     input(f"File extension {file.suffix} not allowed. Press enter to continue.")
     return
   # params["content_model"] = allowed_streams[file.suffix]

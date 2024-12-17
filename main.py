@@ -74,10 +74,10 @@ def dict_from_row(row):
   cache[filepath_str]['path'] = filepath
   filename = row['identifierFileName']
   if not filepath.exists():
-    logging.error(f"File {filepath} does not exist")
+    logging.warning(f"File {filepath} does not exist")
     return {}
   if not filepath.is_dir():
-    logging.error(f"File {filepath} is not a directory")
+    logging.warning(f"File {filepath} is not a directory")
     return {}
 
   files = []
@@ -96,10 +96,10 @@ def dict_from_row(row):
     files.append(file)
 
   if len(files) == 0:
-    logging.error(f"No files found for {filename} in {filepath}")
+    logging.warning(f"No files found for {filename} in {filepath}")
     return {}
   if len(files) > 1:
-    logging.error(f'Multiple files found for {filename}:', files)
+    logging.warning(f'Multiple files found for {filename}:', files)
     return {}
 
   result_dict = {
@@ -125,7 +125,7 @@ def dict_from_row(row):
   return result_dict
 
 def make_ingestable(data: pd.DataFrame):
-  logging.debug("Making data ingestable")
+  logging.info("Making data ingestable")
 
   data_dict = data.to_dict('records')
   data_dict.pop(0)
@@ -135,25 +135,31 @@ def make_ingestable(data: pd.DataFrame):
       } for row in data_dict[:4]
   ])
 
-  parented_data = [
-    {
+  parented_data = []
+  for row in data_dict:
+    if not row['identifierFileName'] or not row["filepath"]:
+      logging.warning(f"Row has no filename and/or path: {row["itemTitle"]}")
+      continue
+    if row['parent'] and type(row['parent']) is str:
+      continue
+    parent = {
       "filename": row['identifierFileName'],
       "filepath": None,
-      'children': [dict_from_row(row)]+[
-        dict_from_row(child)
-        for child in data_dict
-        if child['identifierFileName'] and child['parent'] == row['identifierFileName']
-      ],
+      'children': [dict_from_row(row)],
     }
-    for row in data_dict
-    if row['identifierFileName']
-    and not row['parent'] or type(row['parent']) is not str
-  ]
+    children = []
+    for child in data_dict:
+      if not child['identifierFileName']:
+        continue
+      if child['parent'] == row['identifierFileName']:
+        children.append(dict_from_row(child))
+    parented_data.append(parent)
+
   logging.debug(pprint(parented_data,sort_dicts=False))
   return parented_data
 
 def ingest_data(data, mods_dir):
-  logging.debug("Ingesting data")
+  logging.info("Ingesting data")
   for row in data:
     parent = {key:value for key,value in row.items() if key != 'children'}
     if not parent:

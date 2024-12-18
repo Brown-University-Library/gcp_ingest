@@ -65,7 +65,7 @@ def get_mnt_path_from_windows_path(windows_path:str):
 
   return filepath
 
-def dict_from_row(row):
+def dict_from_row(row, pid=None):
   logging.debug(f"Creating dict from row {row.get('identifierFileName')}")
   # Get the filepath from the row and replace the drive letter
   filepath_str = row['filepath']
@@ -122,6 +122,11 @@ def dict_from_row(row):
   result_dict.update({
     'relationship': parent_relationship,
   })
+
+  if pid:
+    result_dict.update({
+      "pid":pid
+    })
   return result_dict
 
 def make_ingestable(data: pd.DataFrame):
@@ -137,10 +142,23 @@ def make_ingestable(data: pd.DataFrame):
 
   parented_data = []
   for row in data_dict:
+    if row['ingestcomplete'] and not row['pid']:
+      logging.debug(f'ingest already completed for {row["itemTitle"]}')
+      continue
     if not row['identifierFileName'] or not row["filepath"]:
       logging.warning(f"Row has no filename and/or path: {row['itemTitle']}")
       continue
     if row['parent'] and type(row['parent']) is str:
+      continue
+
+    if row["pid"]:
+      for child in data_dict:
+        if child['ingestcomplete']:
+          continue
+        if not child['identifierFileName']:
+          continue
+        if child['parent'] == row['identifierFileName']:
+          parented_data.append(dict_from_row(child,row['pid']))
       continue
     parent = {
       "filename": row['identifierFileName'],
@@ -159,20 +177,27 @@ def make_ingestable(data: pd.DataFrame):
 
 def ingest_data(data, mods_dir):
   logging.info("Ingesting data")
-  for parent in data:
-    if not parent:
+  for item in data:
+    if not item:
       continue
-    logging.info(f'Ingesting parent {parent["filename"]}')
-    filepath = parent['filepath']
-    filename = parent['filename']
+    logging.info(f'Ingesting parent {item["filename"]}')
+    filepath = item['filepath']
+    filename = item['filename']
+    parent_pid = item.get('pid',None)
+
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
+
+    if parent_pid:
+      ingest_files(mods, filepath,stream_map,(parent_pid,item['relationship']))
+      continue
+
     pid = ingest_files(mods, filepath, stream_map)
     if not pid:
       logging.warning(f"ingest failed, no pid for ingest of {filename}")
     # pid = '12345'
     logging.info(f'ingested. {pid=}')
 
-    for child in parent['children']:
+    for child in item['children']:
       if not child:
         continue
       mods = Path(mods_dir).joinpath(f'{child["filename"]}.mods.xml')

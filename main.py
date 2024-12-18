@@ -142,7 +142,7 @@ def make_ingestable(data: pd.DataFrame):
 
   parented_data = []
   for row in data_dict:
-    if row['ingestcomplete'] and not row['pid']:
+    if row.get('ingestcomplete') and not row.get('pid'):
       logging.debug(f'ingest already completed for {row["itemTitle"]}')
       continue
     if not row['identifierFileName'] or not row["filepath"]:
@@ -153,7 +153,8 @@ def make_ingestable(data: pd.DataFrame):
 
     if row["pid"]:
       for child in data_dict:
-        if child['ingestcomplete']:
+        if child.get('ingestcomplete'):
+          logging.info(f"ingest already completed for {child['itemTitle']}")
           continue
         if not child['identifierFileName']:
           continue

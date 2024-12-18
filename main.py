@@ -275,7 +275,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
   logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
     datefmt='%d/%b/%Y %H:%M:%S',
     handlers=[

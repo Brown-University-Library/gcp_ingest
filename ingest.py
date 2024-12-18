@@ -95,7 +95,7 @@ def ingest_files(
   params["mods"] = json.dumps({"xml_data": mods_file_obj})
 
   if not parent_relationship:
-    pid = perform_post(api_url=env_vars["api_url"], params=params)
+    pid = perform_post(api_url=env_vars["api_url"], data=params)
     return pid
 
   (parent_pid, rel_type) = parent_relationship
@@ -137,7 +137,7 @@ def ingest_files(
     logging.debug(f"{files.keys()=}")
 
     pid = "fake12345"
-    pid = perform_post(api_url=env_vars["api_url"], params=params, files=files)
+    pid = perform_post(api_url=env_vars["api_url"], data=params, files=files)
 
     return pid
 

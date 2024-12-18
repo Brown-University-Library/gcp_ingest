@@ -50,17 +50,18 @@ def set_basic_params(env_vars):
   }
   return params
 
-def perform_post(api_url, params, files=None):
+def perform_post(api_url, data, files=None):
   logging.info("performing post")
   try:
     if files:
-      r = requests.post(api_url, data=params, files=files)
+      r = requests.post(api_url, data=data, files=files)
     else:
-      r = requests.post(api_url, data=params)
+      r = requests.post(api_url, data=data)
   except Exception as e:
     logging.exception(f"error creating metadata object: {e}")
     raise
   if r.ok:
+    logging.debug("r is ok")
     return r.json()["pid"]
   else:
     msg = f"error creating metadata object: {r.status_code} - {r.text}"
@@ -129,7 +130,7 @@ def ingest_files(
       "file_name": file.name
     })
     params['content_streams'] = json.dumps(content_streams)
-    files[file.name] = file_obj
+    files['file'] = (file.name,file_obj)
 
     logging.debug(f"{params=}")
     logging.debug(f"{content_streams=}")

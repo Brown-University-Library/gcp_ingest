@@ -117,29 +117,26 @@ def ingest_files(
 
   file = Path(file_path)
   content_streams = []
-  files = {}
 
   if file.suffix.lower() not in allowed_streams.keys():
     input(f"File extension {file.suffix} not allowed. Press enter to continue.")
     return
   # params["content_model"] = allowed_streams[file.suffix]
 
-  with open(file, "rb") as file_obj:
-    content_streams.append({
-      "dsID": allowed_streams[file.suffix.lower()],
-      "file_name": file.name
-    })
-    params['content_streams'] = json.dumps(content_streams)
-    files[file.name] = (file.name,file_obj)
+  content_streams.append({
+    "dsID": allowed_streams[file.suffix.lower()],
+    "file_name": file.name,
+    "path":file.resolve().as_uri()
+  })
+  params['content_streams'] = json.dumps(content_streams)
 
-    logging.debug(f"{params=}")
-    logging.debug(f"{content_streams=}")
-    logging.debug(f"{files.keys()=}")
+  logging.debug(f"{params=}")
+  logging.debug(f"{content_streams=}")
 
-    pid = "fake12345"
-    pid = perform_post(api_url=env_vars["api_url"], data=params, files=files)
+  pid = "fake12345"
+  pid = perform_post(api_url=env_vars["api_url"], data=params)
 
-    return pid
+  return pid
 
 if __name__ == "__main__":
   logging.info("__name__ is `main`")

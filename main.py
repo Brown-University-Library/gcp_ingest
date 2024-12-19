@@ -181,7 +181,6 @@ def ingest_data(data, mods_dir):
   for item in data:
     if not item:
       continue
-    logging.info(f'Ingesting parent {item["filename"]}')
     filepath = item['filepath']
     filename = item['filename']
     parent_pid = item.get('pid',None)
@@ -189,9 +188,11 @@ def ingest_data(data, mods_dir):
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
 
     if parent_pid:
+      logging.info(f'Ingesting {item["filename"]} with parent {parent_pid}')
       ingest_files(mods, filepath,stream_map,(parent_pid,item['relationship']))
       continue
 
+    logging.info(f'Ingesting parent item {item["filename"]}')
     pid = ingest_files(mods, filepath, stream_map)
     if not pid:
       logging.warning(f"ingest failed, no pid for ingest of {filename}")

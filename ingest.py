@@ -130,7 +130,7 @@ def ingest_files(
       "file_name": file.name
     })
     params['content_streams'] = json.dumps(content_streams)
-    files['file'] = (file.name,file_obj)
+    files[file.name] = (file.name,file_obj)
 
     logging.debug(f"{params=}")
     logging.debug(f"{content_streams=}")

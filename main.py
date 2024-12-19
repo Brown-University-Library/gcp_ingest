@@ -151,7 +151,7 @@ def make_ingestable(data: pd.DataFrame):
     if row['parent'] and type(row['parent']) is str:
       continue
 
-    if row["pid"]:
+    if row.get("pid"):
       for child in data_dict:
         if child.get('ingestcomplete'):
           logging.info(f"ingest already completed for {child['itemTitle']}")

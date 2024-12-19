@@ -126,7 +126,7 @@ def ingest_files(
   content_streams.append({
     "dsID": allowed_streams[file.suffix.lower()],
     "file_name": file.name,
-    "path":file.resolve().as_uri()
+    "path":file.resolve()
   })
   params['content_streams'] = json.dumps(content_streams)
 

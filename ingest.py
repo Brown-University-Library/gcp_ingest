@@ -55,7 +55,9 @@ class TempStagingPath:
   def __init__(self,path):
     path = Path(path)
     self.srcpath = path
-  def __enter__(self):
+  def __enter__(self,*args,**kwargs):
+    logging.debug(f'{args=}')
+    logging.debug(f'{kwargs=}')
     if not self.srcpath.exists():
       logging.error(f"path {self.srcpath} doesn't exist")
       raise FileNotFoundError
@@ -66,7 +68,9 @@ class TempStagingPath:
     shutil.copyfile(self.srcpath,newpath)
     self.path = newpath
 
-  def __exit__(self):
+  def __exit__(self,*args,**kwargs):
+    logging.debug(f'{args=}')
+    logging.debug(f'{kwargs=}')
     self.path.unlink()
 
 def perform_post(api_url, data, files=None):

@@ -55,6 +55,7 @@ class TempStagingPath:
   def __init__(self,path):
     path = Path(path)
     self.srcpath = path
+
   def __enter__(self,*args,**kwargs):
     logging.debug(f'{args=}')
     logging.debug(f'{kwargs=}')
@@ -67,6 +68,7 @@ class TempStagingPath:
 
     shutil.copyfile(self.srcpath,newpath)
     self.path = newpath
+    return self.path
 
   def __exit__(self,*args,**kwargs):
     logging.debug(f'{args=}')

@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 import os
+import shutil
 from dotenv import load_dotenv, find_dotenv
 import requests
 import json
@@ -49,6 +50,26 @@ def set_basic_params(env_vars):
     "rels": json.dumps({"isMemberOfCollection": env_vars["collection_pid"]}),
   }
   return params
+
+class TempStagingPath:
+  def __init__(self,path):
+    if type(path) not in (Path,str):
+      raise TypeError
+    path = Path(path)
+    self.srcpath = path
+  def __enter__(self):
+    if not self.srcpath.exists():
+      logging.error(f"path {self.srcpath} doesn't exist")
+      raise FileNotFoundError
+
+    staging_dir = Path(os.environ['STAGING_DIR'])
+    newpath = staging_dir.joinpath(self.srcpath.name)
+
+    shutil.copyfile(self.srcpath,newpath)
+    self.path = newpath
+
+  def __exit__(self):
+    self.path.unlink()
 
 def perform_post(api_url, data, files=None):
   logging.info("performing post")
@@ -123,20 +144,21 @@ def ingest_files(
     return
   # params["content_model"] = allowed_streams[file.suffix]
 
-  content_streams.append({
-    "dsID": allowed_streams[file.suffix.lower()],
-    "file_name": file.name,
-    "path":str(file.resolve())
-  })
-  params['content_streams'] = json.dumps(content_streams)
+  with TempStagingPath(file) as newpath:
+    content_streams.append({
+      "dsID": allowed_streams[file.suffix.lower()],
+      "file_name": file.name,
+      "path":str(newpath.resolve())
+    })
+    params['content_streams'] = json.dumps(content_streams)
 
-  logging.debug(f"{params=}")
-  logging.debug(f"{content_streams=}")
+    logging.debug(f"{params=}")
+    logging.debug(f"{content_streams=}")
 
-  pid = "fake12345"
-  pid = perform_post(api_url=env_vars["api_url"], data=params)
+    pid = "fake12345"
+    pid = perform_post(api_url=env_vars["api_url"], data=params)
 
-  return pid
+    return pid
 
 if __name__ == "__main__":
   logging.info("__name__ is `main`")

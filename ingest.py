@@ -53,8 +53,6 @@ def set_basic_params(env_vars):
 
 class TempStagingPath:
   def __init__(self,path):
-    if type(path) not in (Path,str):
-      raise TypeError
     path = Path(path)
     self.srcpath = path
   def __enter__(self):

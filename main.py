@@ -219,9 +219,9 @@ def check_cols(filepath,sheet_name=None):
     if not sheet_name:
       sheet_name = get_sheet_name(filepath)
     data = pd.read_excel(f,sheet_name)
-    data = data.fillna('')
     # Remove empty rows
     data.dropna(how='all', inplace=True)
+    data.fillna('',inplace=True)
     # Check for empty column headers in pandas dataframe
     headers = data.columns
     # logging.debug(f"Headers: {headers}")

@@ -39,7 +39,7 @@ def get_cache_options(split_path:list):
     cache_options.append('\\'.join(split_path[:i+1]))
   return cache_options
 
-def get_mnt_path_from_windows_path(windows_path:str):
+def get_mnt_path_from_windows_path(windows_path:str, cache={'mntdir':{'path':Path('/mnt')}}):
   sep='\\'
   logging.debug(f"Getting mnt path from windows path {abbr_path(windows_path,40,sep)}")
   if windows_path in cache:
@@ -69,10 +69,10 @@ def dict_from_row(row, pid=None):
   logging.debug(f"Creating dict from row {row.get('identifierFileName')}")
   # Get the filepath from the row and replace the drive letter
   filepath_str = row['filepath']
-  filepath = get_mnt_path_from_windows_path(filepath_str)
+  filepath = get_mnt_path_from_windows_path(filepath_str,cache)
   # add path to cache
   cache[filepath_str]['path'] = filepath
-  filename = row['identifierFileName']
+  filename = str(row['identifierFileName']).strip()
   if not filepath.exists():
     logging.warning(f"File {filepath} does not exist")
     return {}

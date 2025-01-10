@@ -80,20 +80,11 @@ def dict_from_row(row, pid=None):
     logging.warning(f"File {filepath} is not a directory")
     return {}
 
-  files = []
   if not cache[filepath_str].get('glob', None):
     cache[filepath_str]['glob'] = list(filepath.glob('*'))
   fileglob = cache[filepath_str]['glob']
   logging.debug(f"Fileglob: {fileglob}")
-  for file in fileglob:
-    if file.stem != filename:
-      logging.debug(f"Skipping file {file.name} because {file.stem} != {filename}")
-      continue
-    if file.suffix.lower() not in stream_map.keys():
-      logging.debug(f"Skipping {file.suffix[1:].upper()} file {file.name}")
-      continue
-    logging.debug(f"Found {file.suffix[1:].upper()} file {file.name}")
-    files.append(file)
+  files = file_from_glob(filename, fileglob,allowed_streams=stream_map.keys())
 
   if len(files) == 0:
     logging.warning(f"No files found for {filename} in {filepath}")
@@ -128,6 +119,21 @@ def dict_from_row(row, pid=None):
       "pid":pid
     })
   return result_dict
+
+def file_from_glob(filename, fileglob,allowed_streams=[]):
+  files = []
+  for file in fileglob:
+    if filename == file.name:
+      return [file]
+    if file.stem != filename:
+      logging.debug(f"Skipping file {file.name} because {file.stem} != {filename}")
+      continue
+    if allowed_streams and file.suffix.lower() not in allowed_streams:
+      logging.debug(f"Skipping {file.suffix[1:].upper()} file {file.name}")
+      continue
+    logging.debug(f"Found {file.suffix[1:].upper()} file {file.name}")
+    files.append(file)
+  return files
 
 def make_ingestable(data: pd.DataFrame):
   logging.info("Making data ingestable")

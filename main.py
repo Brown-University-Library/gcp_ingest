@@ -212,6 +212,31 @@ def ingest_data(data, mods_dir):
       logging.info(f'Ingesting {child["filename"]} with parent {pid}')
       ingest_files(mods, child['filepath'], stream_map, (pid,child['relationship']))
 
+def check_ingestable_for_mods(data, mods_dir):
+  logging.info("Ingesting data")
+  for item in data:
+    if not item:
+      continue
+    filename = item['filename']
+    parent_pid = item.get('pid',None)
+
+    mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
+    if not mods.exists():
+        logging.warning(f"mods {mods.name} does not exist")
+
+    if parent_pid:
+      logging.info(f'Mock ingesting {item["filename"]} with parent {parent_pid}')
+      continue
+
+    logging.info(f'Mock ingesting parent item {item["filename"]}')
+
+    for child in item['children']:
+      if not child:
+        continue
+      mods = Path(mods_dir).joinpath(f'{child["filename"]}.mods.xml')
+      if not mods.exists():
+        logging.warning(f"mods {mods.name} does not exist")
+
 def get_sheet_name(filepath):
   sheets = pd.ExcelFile(filepath).sheet_names
   for i, sheet in enumerate(sheets):
@@ -253,6 +278,7 @@ def main(args):
   sheet = check_cols(args.data_file, args.sheet)
   data = make_ingestable(sheet)
   if args.mock:
+    check_ingestable_for_mods(data, mods_dir)
     logging.info(pformat(data,sort_dicts=False))
     logging.info("Mock run, not ingesting")
     return

@@ -83,7 +83,7 @@ def perform_post(api_url, data, files=None):
     else:
       r = requests.post(api_url, data=data)
   except Exception as e:
-    logging.exception(f"error creating metadata object: {e}")
+    logging.exception(f"error creating object: {e}")
     raise
   if r.ok:
     logging.debug("r is ok")
@@ -114,6 +114,9 @@ def ingest_files(
   params = set_basic_params(env_vars)
 
   mods_path = Path(mods_path)
+  if not mods_path.exists():
+    logging.WARNING(f"mods file {mods_path.name} does not exist. skipping...")
+    return
   with open(mods_path, "r") as mods_file:
     mods_file_obj = mods_file.read()
 
@@ -143,8 +146,8 @@ def ingest_files(
   file = Path(file_path)
   content_streams = []
 
-  if file.suffix.lower() not in allowed_streams.keys():
-    input(f"File extension {file.suffix} not allowed. Press enter to continue.")
+  if allowed_streams and file.suffix.lower() not in allowed_streams.keys():
+    logging.warning(f"File extension {file.suffix} not allowed. skipping...")
     return
   # params["content_model"] = allowed_streams[file.suffix]
 
@@ -159,7 +162,6 @@ def ingest_files(
     logging.debug(f"{params=}")
     logging.debug(f"{content_streams=}")
 
-    pid = "fake12345"
     pid = perform_post(api_url=env_vars["api_url"], data=params)
 
     return pid

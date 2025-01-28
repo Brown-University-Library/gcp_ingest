@@ -223,6 +223,9 @@ def check_ingestable_for_mods(data, mods_dir):
     if not mods.exists():
         logging.warning(f"mods {mods.name} does not exist")
 
+    if "children" not in item.keys():
+      logging.warning(f"item has no key 'children': {item}")
+
     for child in item['children']:
       if not child:
         continue

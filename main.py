@@ -188,7 +188,7 @@ def ingest_data(data, mods_dir):
     if not item:
       continue
     filepath = item['filepath']
-    filename = item['filename']
+    filename = item['filename'].strip()
     parent_pid = item.get('pid',None)
 
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
@@ -217,7 +217,7 @@ def check_ingestable_for_mods(data, mods_dir):
   for item in data:
     if not item:
       continue
-    filename = item['filename']
+    filename = item['filename'].strip()
     parent_pid = item.get('pid',None)
 
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')

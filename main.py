@@ -218,17 +218,10 @@ def check_ingestable_for_mods(data, mods_dir):
     if not item:
       continue
     filename = item['filename'].strip()
-    parent_pid = item.get('pid',None)
 
     mods = Path(mods_dir).joinpath(f'{filename}.mods.xml')
     if not mods.exists():
         logging.warning(f"mods {mods.name} does not exist")
-
-    if parent_pid:
-      logging.info(f'Mock ingesting {item["filename"]} with parent {parent_pid}')
-      continue
-
-    logging.info(f'Mock ingesting parent item {item["filename"]}')
 
     for child in item['children']:
       if not child:

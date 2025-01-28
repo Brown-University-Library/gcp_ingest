@@ -160,7 +160,7 @@ def make_ingestable(data: pd.DataFrame):
     if row.get("pid"):
       for child in data_dict:
         if child.get('ingestcomplete'):
-          logging.info(f"ingest already completed for {child['itemTitle']}")
+          logging.debug(f"ingest already completed for {child['itemTitle']}")
           continue
         if not child['identifierFileName']:
           continue
@@ -279,7 +279,7 @@ def main(args):
   data = make_ingestable(sheet)
   if args.mock:
     check_ingestable_for_mods(data, mods_dir)
-    logging.info(pformat(data,sort_dicts=False))
+    logging.debug(pformat(data,sort_dicts=False))
     logging.info("Mock run, not ingesting")
     return
   ingest_data(data, mods_dir)

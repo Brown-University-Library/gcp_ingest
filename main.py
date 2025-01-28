@@ -90,7 +90,7 @@ def dict_from_row(row, pid=None):
     logging.warning(f"No files found for {filename} in {filepath}")
     return {}
   if len(files) > 1:
-    logging.warning(f'Multiple files found for {filename}:', files)
+    logging.warning(f'Multiple files found for {filename}: {files}')
     return {}
 
   result_dict = {

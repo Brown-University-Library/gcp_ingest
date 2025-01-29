@@ -116,7 +116,8 @@ def dict_from_row(row, pid=None):
 
   if pid:
     result_dict.update({
-      "pid":pid
+      "pid":pid,
+      "children":[]
     })
   return result_dict
 

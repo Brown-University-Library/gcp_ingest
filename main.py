@@ -300,7 +300,7 @@ def parse_arguments():
     help='Run without ingesting'
   )
   parser.add_argument("-l", "--log",
-    dest="logLevel",
+    dest="loglevel",
     choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
     default='INFO',
     help="Set the logging level")

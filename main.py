@@ -299,12 +299,18 @@ def parse_arguments():
     action='store_true',
     help='Run without ingesting'
   )
+  parser.add_argument("-l", "--log",
+    dest="logLevel",
+    choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+    default='INFO',
+    help="Set the logging level")
   args = parser.parse_args()
   return args
 
 if __name__ == '__main__':
+  args = parse_arguments()
   logging.basicConfig(
-    level=logging.INFO,
+    level=args.loglevel,
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
     datefmt='%d/%b/%Y %H:%M:%S',
     handlers=[
@@ -312,7 +318,6 @@ if __name__ == '__main__':
         logging.StreamHandler()
     ]
   )
-  args = parse_arguments()
   mount_dirpath = Path(args.mntdir)
   cache.update({
     'mntdir': {'path':mount_dirpath},

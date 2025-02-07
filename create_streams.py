@@ -3,7 +3,6 @@ from rq import Queue
 from redis import Redis
 import requests
 from dotenv import load_dotenv
-import json
 
 def queue_job(queue_name, function_name, function_args=None, function_kwargs=None):
     function_args = function_args or []
@@ -20,7 +19,7 @@ def queue_create_stream_job(pid, datastream_or_url=None, visibility="BDR_PUBLIC"
 def main():
     response = requests.get(api_url,params)
     if response.ok:
-        docs = json.load(response.content)["response"]["docs"]
+        docs = response.json()["response"]["docs"]
     if docs:
         for doc in docs:
             if doc["rel_is_part_of_ssim"]:

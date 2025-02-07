@@ -19,8 +19,12 @@ def queue_create_stream_job(pid, datastream_or_url=None, visibility="BDR_PUBLIC"
 def main():
     response = requests.get(api_url,params)
     if response.ok:
-        docs = response.content
-        print(docs)
+        docs = response.content["response"]["docs"]
+    if docs:
+        for doc in docs:
+            if doc["rel_is_part_of_ssim"]:
+                continue
+            print(doc["pid"])
 
 if __name__ == "__main__":
     load_dotenv()
@@ -28,7 +32,6 @@ if __name__ == "__main__":
     collection = os.environ["COLLECTION_PID"]
     params = {
         "q":f"rel_is_member_of_collection_ssim:{collection}+object_type:video",
-        "fl":"pid,rel_is_part_of_ssim",
         "rows":500
     }
     main()

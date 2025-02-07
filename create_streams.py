@@ -1,13 +1,8 @@
+import os
 from rq import Queue
 from redis import Redis
 import requests
-
-api_url = "https://repository.library.brown.edu/api/search/"
-params = {
-    "q":"rel_is_member_of_collection_ssim:bdr:vq8ctcmv+object_type:video",
-    "fl":"pid,rel_is_part_of_ssim",
-    "rows":500
-}
+from dotenv import load_dotenv
 
 def queue_job(queue_name, function_name, function_args=None, function_kwargs=None):
     function_args = function_args or []
@@ -28,4 +23,12 @@ def main():
         print(docs)
 
 if __name__ == "__main__":
+    load_dotenv()
+    api_url = os.environ["SOLR_URL"]
+    collection = os.environ["COLLECTION_PID"]
+    params = {
+        "q":f"rel_is_member_of_collection_ssim:{collection}+object_type:video",
+        "fl":"pid,rel_is_part_of_ssim",
+        "rows":500
+    }
     main()

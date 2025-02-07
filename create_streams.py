@@ -27,8 +27,7 @@ if __name__ == "__main__":
     api_url = os.environ["SOLR_URL"]
     collection = os.environ["COLLECTION_PID"]
     params = {
-        "q":f"rel_is_member_of_collection_ssim:{collection}+object_type:video",
-        "fl":"pid,rel_is_part_of_ssim",
+        "q":f"rel_is_member_of_collection_ssim:{collection} object_type:video",
         "rows":500
     }
     main()

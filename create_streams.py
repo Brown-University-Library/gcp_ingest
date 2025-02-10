@@ -8,13 +8,13 @@ def queue_job(queue_name, function_name, function_args=None, function_kwargs=Non
     function_args = function_args or []
     function_kwargs = function_kwargs or {}
     q = Queue(queue_name, connection=Redis())
-    q.enqueue_call(func=function_name, args=function_args, kwargs=function_kwargs, timeout=72000)
+    return q.enqueue_call(func=function_name, args=function_args, kwargs=function_kwargs, timeout=72000)
 
 def queue_create_stream_job(pid, datastream_or_url=None, visibility="BDR_PUBLIC"):
     kwargs={'visibility': visibility}
     if datastream_or_url:
         kwargs['datastream_or_url'] = datastream_or_url
-    queue_job(queue_name='stream_objects', function_name='stream_objects.create', function_args=(pid,), function_kwargs=kwargs)
+    return queue_job(queue_name='stream_objects', function_name='stream_objects.create', function_args=(pid,), function_kwargs=kwargs)
 
 def main():
     load_dotenv()

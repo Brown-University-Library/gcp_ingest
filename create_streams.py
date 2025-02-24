@@ -1,8 +1,20 @@
+import json
 import os
 from rq import Queue
 from redis import Redis
 import requests
 from dotenv import load_dotenv
+
+class ResponseError(RuntimeError):
+    pass
+
+def check_response(resp,message):
+    if not resp.ok:
+            raise ResponseError(f"{message} - Response not ok: {resp.status_code} - {resp.headers}")
+    response = resp.json()["response"]
+    if not response:
+        raise ResponseError(f"{message} - No response")
+    return response
 
 def queue_job(queue_name, function_name, function_args=None, function_kwargs=None):
     function_args = function_args or []
@@ -16,42 +28,69 @@ def queue_create_stream_job(pid, datastream_or_url=None, visibility="BDR_PUBLIC"
         kwargs['datastream_or_url'] = datastream_or_url
     return queue_job(queue_name='stream_objects', function_name='stream_objects.create', function_args=(pid,), function_kwargs=kwargs)
 
-def main():
-    load_dotenv()
-    api_url = os.environ["SOLR_URL"]
-    collection = os.environ["COLLECTION_PID"]
+def get_top_level_items(api_url,collection):
+    # Select every top level item from collection, up to 9999
     params = {
         "q":f"rel_is_member_of_collection_ssim:{collection}",
         "fq":"!rel_is_part_of_ssim:['' TO *]",
-        "rows":500
+        "rows":9999
     }
     response = requests.get(api_url,params)
     if not response.ok:
         print(f"Response not ok: {response.status_code} - {response.headers}")
         return
     print(f'found {response.json()["response"]["numFound"]} items...')
-    docs = response.json()["response"]["docs"]
-    for doc in docs:
-        filename = doc["mods_id_filename_ssim"][0]
-        pid = doc["pid"]
-        resp = requests.get(api_url,params={
-            "q":f'rel_is_part_of_ssim:{pid} mods_id_filename_ssim:{filename}'
-        })
-        if not resp.ok:
-            print(f"Response not ok for {pid} - {filename}: {resp.status_code} - {resp.headers}")
-            continue
-        response = resp.json()["response"]
-        if not response:
-            print(f"No response for {pid} - {filename}")
-            continue
-        if response["numFound"] != 1:
-            print(f'more than one equal child found for {pid} - {filename}: {[doc["pid"]+" - "+doc["mods_id_filename_ssim"] for doc in response["docs"]]}')
-            continue
-        item = response["docs"][0]
-        print(f"parent {pid} will be assigned stream link for item {item['pid']}")
-        # Queue job for stream creation
-        # Get stream from job? or maybe sleep & get from item?
-        # edit parent rels with stream link
+    return response.json()["response"]["docs"]
+
+def get_child_with_filename(api_url,pid,filename):
+    resp = requests.get(api_url,params={
+        "q":f'rel_is_part_of_ssim:{pid} mods_id_filename_ssim:{filename}'
+    })
+    try:
+        response = check_response(resp,f"{pid}, {filename}")
+    except ResponseError:
+        return
+    if response["numFound"] != 1:
+        print(f'more than one matching child found for {pid} - {filename}: {[doc["pid"]+" - "+doc["mods_id_filename_ssim"] for doc in response["docs"]]}')
+        return
+    item = response["docs"][0]
+
+    return item
+
+def select_stream_from_item_pid(api_url,pid):
+    resp = requests.get(api_url,params={
+        "q":f"rel_is-derivation_of_ssim:{pid} object_type:stream"
+    })
+    response = check_response(resp,f"{pid} stream")
+    if response['numFound'] != 1:
+        print(f"more than one stream found for {pid}")
+    return response['docs']
+
+def add_stream_to_rels(pid, panoptoId):
+    params = {
+        'pid':pid,
+        'rels': json.dumps({'panoptoId': panoptoId}),
+        'permission_ids':json.dumps([os.environ['API_IDENTITY']]),
+        'message': "gcp rels ext update",
+        'agent_name':"gcp ingest"
+    }
+    r = requests.put(os.environ["API_URL"],data=params)
+    if not r.ok:
+        raise Exception(f'{r.status_code} - {r.text}')
+
+def main():
+    load_dotenv()
+    api_url = os.environ["SOLR_URL"]
+    collection = os.environ["COLLECTION_PID"]
+
+    # For all videos in collection
+    #   - Queue job for stream creation
+
+    # For each parent item's
+    #   name-matching child's
+    #     stream object
+    #       - Get its panopto id
+    #       - update the parent's rels with the panopto id
 
 if __name__ == "__main__":
     main()

@@ -59,7 +59,7 @@ def get_child_with_filename(api_url,pid,filename):
 
 def select_stream_from_item_pid(api_url,pid):
     resp = requests.get(api_url,params={
-        "q":f"rel_is-derivation_of_ssim:{pid} object_type:stream"
+        "q":f"rel_is_derivation_of_ssim:{pid} object_type:stream"
     })
     response = check_response(resp,f"{pid} stream")
     if response['numFound'] != 1:
@@ -78,19 +78,41 @@ def add_stream_to_rels(pid, panoptoId):
     if not r.ok:
         raise Exception(f'{r.status_code} - {r.text}')
 
+def get_stream_id(pid,api_url):
+    resp=requests.get(api_url+pid)
+    item = resp.json()
+    stream_obj = item['relations']['hasPart'][0]
+    panopto_id = stream_obj.get('rel_panopto_id_ssi')
+    return panopto_id
+
 def main():
     load_dotenv()
     api_url = os.environ["SOLR_URL"]
+    item_api = os.environ["API_URL"]
     collection = os.environ["COLLECTION_PID"]
 
-    # For all videos in collection
-    #   - Queue job for stream creation
+    resp = requests.get(api_url,params={
+        "q":f"rel_is_member_of_collection_ssim:{collection} object_type:video"
+    })
+    try:
+        response = check_response(resp)
+    except ResponseError:
+        print("Error on main query")
+        return
+    print(f"found {response['numFound']} items")
 
-    # For each parent item's
-    #   name-matching child's
-    #     stream object
-    #       - Get its panopto id
-    #       - update the parent's rels with the panopto id
+    for doc in response['docs']:
+        print(f"queueing job for {doc['pid']}")
+        # For all videos in collection
+        #   - Queue job for stream creation
+
+    parents = get_top_level_items(api_url,collection)
+    for parent in parents:
+        pid = parent['pid']
+        filename = parent['identifierFileName']
+        matched_child = get_child_with_filename(api_url,pid,filename)
+        panoptoId = get_stream_id(matched_child['pid'],item_api)
+        add_stream_to_rels(pid,panoptoId)
 
 if __name__ == "__main__":
     main()

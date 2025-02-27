@@ -84,7 +84,7 @@ def add_stream_to_rels(pid, panoptoId):
 def get_stream_id(pid,api_url):
     resp=requests.get(api_url+pid)
     item = resp.json()
-    stream_obj = item['relations']['hasPart'][0]
+    stream_obj = item['relations']['hasDerivation'][0]
     panopto_id = stream_obj.get('rel_panopto_id_ssi')
     return panopto_id
 

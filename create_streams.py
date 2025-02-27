@@ -45,7 +45,9 @@ def get_top_level_items(api_url,collection):
 
 def get_child_with_filename(api_url,pid,filename):
     resp = requests.get(api_url,params={
-        "q":f'rel_is_part_of_ssim:{pid} mods_id_filename_ssim:{filename}'
+        "q":f'rel_is_part_of_ssim:{pid} \
+            mods_id_filename_ssim:{filename} \
+            object_type:video'
     })
     try:
         response = check_response(resp,f"{pid}, {filename}")

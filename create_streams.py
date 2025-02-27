@@ -52,7 +52,7 @@ def get_child_with_filename(api_url,pid,filename):
     except ResponseError:
         return
     if response["numFound"] != 1:
-        print(f'more than one matching child found for {pid} - {filename}: {[doc["pid"]+" - "+doc["mods_id_filename_ssim"] for doc in response["docs"]]}')
+        print(f'more than one matching child found for {pid} - {filename}: {str([doc["pid"]+" - "+str(doc["mods_id_filename_ssim"]) for doc in response["docs"]])}')
         return
     item = response["docs"][0]
 
@@ -141,11 +141,11 @@ def main():
         return
     if args.queue:
         print("queueing jobs for full gcp collection")
-        gcp_make_streams()
+        gcp_make_streams(api_url,collection)
         return
     if args.add:
         print("attaching streams to parents for full gcp collection")
-        gcp_attach_streams_to_parents()
+        gcp_attach_streams_to_parents(api_url,collection,item_api)
         return
     parser.print_help()
 

@@ -85,7 +85,9 @@ def get_stream_id(pid,api_url):
     resp=requests.get(api_url+pid)
     item = resp.json()
     stream_obj = item['relations']['hasDerivation'][0]
-    panopto_id = stream_obj.get('rel_panopto_id_ssi')
+    resp_s=requests.get(api_url+stream_obj['pid'])
+    item_s = resp_s.json()
+    panopto_id = item_s.get('rel_panopto_id_ssi')
     return panopto_id
 
 def gcp_make_streams(api_url,collection):

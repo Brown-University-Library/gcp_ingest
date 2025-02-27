@@ -135,13 +135,16 @@ def main():
 
     args = parser.parse_args()
 
-    if args.quque and args.add:
+    if args.queue and args.add:
         print("can't make streams and add to parent at once, please allow time for stream generation")
+        parser.print_help()
         return
     if args.queue:
+        print("queueing jobs for full gcp collection")
         gcp_make_streams()
         return
     if args.add:
+        print("attaching streams to parents for full gcp collection")
         gcp_attach_streams_to_parents()
         return
     parser.print_help()

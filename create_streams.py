@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 from rq import Queue
@@ -85,12 +86,8 @@ def get_stream_id(pid,api_url):
     panopto_id = stream_obj.get('rel_panopto_id_ssi')
     return panopto_id
 
-def main():
-    load_dotenv()
-    api_url = os.environ["SOLR_URL"]
-    item_api = os.environ["API_URL"]
-    collection = os.environ["COLLECTION_PID"]
-
+def gcp_make_streams(api_url,collection):
+    # create stream for all videos in collection
     resp = requests.get(api_url,params={
         "q":f"rel_is_member_of_collection_ssim:{collection} object_type:video"
     })
@@ -103,9 +100,10 @@ def main():
 
     for doc in response['docs']:
         print(f"queueing job for {doc['pid']}")
-        # For all videos in collection
-        #   - Queue job for stream creation
+        queue_create_stream_job(doc['pid'])
 
+def gcp_attach_streams_to_parents(api_url,collection,item_api):
+    # for all parent items, attach stream id of name-matched item to parent item
     parents = get_top_level_items(api_url,collection)
     for parent in parents:
         pid = parent['pid']
@@ -113,6 +111,40 @@ def main():
         matched_child = get_child_with_filename(api_url,pid,filename)
         panoptoId = get_stream_id(matched_child['pid'],item_api)
         add_stream_to_rels(pid,panoptoId)
+
+def main():
+    load_dotenv()
+    api_url = os.environ["SOLR_URL"]
+    item_api = os.environ["API_URL"]
+    collection = os.environ["COLLECTION_PID"]
+
+    parser = argparse.ArgumentParser(
+        description="makes streams and adds stream to parent for GCP"
+    )
+
+    parser.add_argument("-q","--queue-stream-jobs",
+        action="store_true",
+        help="queue stream jobs for GCP collection",
+        dest='queue'
+    )
+    parser.add_argument("-a","--add-stream-to-parents",
+        action="store_true",
+        help="add stream IDs to parents in GCP collection",
+        dest='add'
+    )
+
+    args = parser.parse_args()
+
+    if args.quque and args.add:
+        print("can't make streams and add to parent at once, please allow time for stream generation")
+        return
+    if args.queue:
+        gcp_make_streams()
+        return
+    if args.add:
+        gcp_attach_streams_to_parents()
+        return
+    parser.print_help()
 
 if __name__ == "__main__":
     main()

@@ -72,7 +72,7 @@ def select_stream_from_item_pid(api_url,pid):
 def add_stream_to_rels(pid, panoptoId):
     params = {
         'pid':pid,
-        'rels': json.dumps({'panoptoId': panoptoId}),
+        'rels': json.dumps({'panopto_id': panoptoId}),
         'permission_ids':json.dumps([os.environ['API_IDENTITY']]),
         'message': "gcp rels ext update",
         'agent_name':"gcp ingest"

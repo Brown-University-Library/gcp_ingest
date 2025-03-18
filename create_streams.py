@@ -77,6 +77,8 @@ def add_stream_to_rels(pid, panoptoId):
         'message': "gcp rels ext update",
         'agent_name':"gcp ingest"
     }
+    # TODO: add stream cmodel to rels... seems to need xml, see link:
+    # https://github.com/Brown-University-Library/bdr_apis_project/blob/0f176eb800ca7c31b45822f291e69784d14153f7/items_app/metadata.py#L837
     r = requests.put(os.environ["API_URL"],data=params)
     if not r.ok:
         raise Exception(f'{r.status_code} - {r.text}')

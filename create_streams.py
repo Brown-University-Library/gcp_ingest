@@ -23,7 +23,7 @@ def queue_job(queue_name, function_name, function_args=None, function_kwargs=Non
     q = Queue(queue_name, connection=Redis())
     return q.enqueue_call(func=function_name, args=function_args, kwargs=function_kwargs, timeout=72000)
 
-def queue_create_stream_job(pid, datastream_or_url=None, visibility="BDR_PUBLIC"):
+def queue_create_stream_job(pid, datastream_or_url=None, visibility="public"):
     kwargs={'visibility': visibility}
     if datastream_or_url:
         kwargs['datastream_or_url'] = datastream_or_url

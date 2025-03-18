@@ -98,7 +98,7 @@ def gcp_make_streams(api_url,collection):
         "q":f"rel_is_member_of_collection_ssim:{collection} object_type:video"
     })
     try:
-        response = check_response(resp)
+        response = check_response(resp,"videos query")
     except ResponseError:
         print("Error on main query")
         return

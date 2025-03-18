@@ -95,7 +95,8 @@ def get_stream_id(pid,api_url):
 def gcp_make_streams(api_url,collection):
     # create stream for all videos in collection
     resp = requests.get(api_url,params={
-        "q":f"rel_is_member_of_collection_ssim:{collection} object_type:video"
+        "q":f"rel_is_member_of_collection_ssim:{collection} object_type:video",
+        "rows":999
     })
     try:
         response = check_response(resp,"videos query")

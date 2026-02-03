@@ -5,6 +5,7 @@ from rq import Queue
 from redis import Redis
 import requests
 from dotenv import load_dotenv
+import urllib.parse
 
 class ResponseError(RuntimeError):
     pass
@@ -32,7 +33,8 @@ def queue_create_stream_job(pid, datastream_or_url=None, visibility="public"):
 def get_top_level_items(api_url,collection):
     # Select every top level item from collection, up to 9999
     params = {
-        "q":f"rel_is_member_of_collection_ssim:{collection}",
+        "q":f"rel_is_member_of_collection_ssim:{collection} \
+            object_type:undetermined",
         "fq":"!rel_is_part_of_ssim:['' TO *]",
         "rows":9999
     }
@@ -46,15 +48,14 @@ def get_top_level_items(api_url,collection):
 def get_child_with_filename(api_url,pid,filename):
     resp = requests.get(api_url,params={
         "q":f'rel_is_part_of_ssim:{pid} \
-            mods_id_filename_ssim:{filename} \
             object_type:video'
     })
     try:
         response = check_response(resp,f"{pid}, {filename}")
     except ResponseError:
         return
-    if response["numFound"] != 1:
-        print(f'more than one matching child found for {pid} - {filename}: {str([doc["pid"]+" - "+str(doc["mods_id_filename_ssim"]) for doc in response["docs"]])}')
+    if not response["docs"]:
+        print(f"no docs for {pid} - {filename}")
         return
     item = response["docs"][0]
 
@@ -84,12 +85,15 @@ def add_stream_to_rels(pid, panoptoId):
         raise Exception(f'{r.status_code} - {r.text}')
 
 def get_stream_id(pid,api_url):
-    resp=requests.get(api_url+pid)
-    item = resp.json()
-    stream_obj = item['relations']['hasDerivation'][0]
-    resp_s=requests.get(api_url+stream_obj['pid'])
-    item_s = resp_s.json()
-    panopto_id = item_s.get('rel_panopto_id_ssi')
+    resp=requests.get(api_url,params={
+        "q":"rel_is_derivation_of_ssim:"+pid
+    })
+    docs = check_response(resp,"").get("docs")
+    if not docs:
+        print(f'cant find stream for {pid}')
+        return
+    item = docs[0]
+    panopto_id = item.get('rel_panopto_id_ssi')
     return panopto_id
 
 def gcp_make_streams(api_url,collection):
@@ -111,13 +115,24 @@ def gcp_make_streams(api_url,collection):
 
 def gcp_attach_streams_to_parents(api_url,collection,item_api):
     # for all parent items, attach stream id of name-matched item to parent item
+    with open("../streamIDs.csv","w") as f:
+            f.write("pid,status,panoptoId\n")
     parents = get_top_level_items(api_url,collection)
     for parent in parents:
         pid = parent['pid']
-        filename = parent['identifierFileName']
+        filename = parent['mods_id_filename_ssim'][0]
         matched_child = get_child_with_filename(api_url,pid,filename)
-        panoptoId = get_stream_id(matched_child['pid'],item_api)
-        add_stream_to_rels(pid,panoptoId)
+        if not matched_child:
+            with open("../streamIDs.csv","a") as f:
+                f.write(f"{pid},no videos,\n")
+            continue
+        panoptoId = get_stream_id(matched_child['pid'],api_url)
+        if panoptoId:
+            status="all set"
+        else:
+            status="no stream"
+        with open("../streamIDs.csv","a") as f:
+            f.write(f"{pid},{status},{panoptoId}\n")
 
 def main():
     load_dotenv()
